@@ -157,7 +157,7 @@ Full DAX library, including production variance and yield KPIs, can be defined i
 - DAX measure development  
 - Manufacturing KPI reporting (OTD, margin, variance, OEE)  
 - Understanding of shop-floor concepts: scrap, yield, standard vs actual hours  
-- Consultant-level documentation and presentation  
+- Documentation and presentation  
 
 ---
 
