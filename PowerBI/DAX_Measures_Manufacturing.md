@@ -11,7 +11,7 @@ This file documents the DAX measures used in the **Production Performance Analyt
 >   - `Parts`
 >   - `Machines`
 >   - `Date` (DAX calendar table)
-> - Measures should be created in a logical “home” table (e.g. Sales KPIs in `SalesOrders`,
+> - Measures was created in a logical “home” table (e.g. Sales KPIs in `SalesOrders`,
 >   production KPIs in `JobOrders`, time-intel in `Date`).
 > - Calculated columns are only used where row-level flags are needed.
 
@@ -52,3 +52,4 @@ ADDCOLUMNS (
     "Year-Month", FORMAT ( [Date], "YYYY-MM" ),
     "Week", WEEKNUM ( [Date] )
 )
+
