@@ -207,7 +207,7 @@ All visuals are clickable on the portfolio website thanks to a custom lightbox s
 
 **Marc Lomuntad**  
 📧 marc.lomuntad24@gmail.com  
-🔗 LinkedIn: (insert your LinkedIn URL here)
+🔗 LinkedIn: https://www.linkedin.com/in/marc-lomuntad-052943278/
 
 ---
 
