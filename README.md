@@ -1,169 +1,223 @@
 # 🏭 Production Performance Analytics System  
-### SQL Server → Power BI | Manufacturing Analytics Case Study  
+### Epicor-style REST API → Python ETL → SQL Server → Power BI  
 **By Marc Lomuntad**
 
----
-
-## 📌 Overview
-This project demonstrates a complete manufacturing analytics workflow:
-
-- Designed and built a **SQL Server** relational database
-- Imported data directly into **Power BI**
-- Constructed a **star schema model**
-- Developed a full library of **DAX KPIs**
-- Created dashboards for On-Time Delivery, Margin, Production Variance, and OEE
-
-The system simulates a real production environment similar to an engineered wood manufacturer (e.g., laminated beams, CLT panels).
+This project demonstrates a complete, production-style analytics solution for a manufacturing environment.  
+It combines:
+- **Source**: SQL Server schema modeled after an ERP (Customers, Parts, SalesOrders, JobOrders, Machines)
+- **Integration**: Python job that pulls data from an Epicor-like REST API pattern and loads SQL Server
+- **Semantic Model**: Power BI with DAX measures for On-Time Delivery, margin, variance, yield, and OEE
+- **Dashboards**: KPI views for leadership and operations (service, profitability, production efficiency) typically used in real engineered-wood, metal fabrication, and general manufacturing operations.
 
 ---
 
-## 🏗️ Architecture Diagram
+# 🏗️ Architecture Overview
 
-```text
-SQL Server → Power BI Data Model → DAX Measures → Dashboards (OTD, Margin, Variance, OEE)
+```
+This project simulates a realistic ERP → Analytics stack:
+
+1. **Epicor-style ERP REST API (simulated)**  
+   - Endpoints such as `/customers`, `/parts`, `/salesorders`, `/joborders`  
+   - JSON responses, token-based auth, similar to Epicor Kinetic REST / BAQ patterns.
+
+2. **Python Integration Job** (`/src/python/erp_to_sql_powerbi.py`)  
+   - Calls the ERP-like API on a schedule  
+   - Performs basic transformations and incremental loading  
+   - Writes into the `ManufacturingDemo` database in SQL Server
+
+3. **SQL Server Data Model** (`/src/sql`)  
+   - Tables: `Customers`, `Parts`, `Machines`, `SalesOrders`, `JobOrders`  
+   - Clean relational structure suitable for analytics  
+   - Seed data to make the dashboards immediately usable
+
+4. **Power BI Semantic Model & DAX** (`/src/dax/DAX_Measures_Script.md`)  
+   - Date table & relationships  
+   - Service KPIs: On-Time Delivery % (OrderDate and ShipDate via USERELATIONSHIP)  
+   - Financial KPIs: Revenue, Std Cost, Margin, Margin %  
+   - Production KPIs: Std vs Actual Hours, Hours Variance %  
+   - OEE: Availability, Performance, Quality, and OEE %
+
+5. **Dashboards & Portfolio Website** (`/website/index.html`)  
+   - Static case-study site with screenshots and narrative  
+   - Dashboard screenshots for OTD, Margin, Variance, and OEE views
 ```
 
 ---
 
-## 📊 Dashboards Delivered
-- **On-Time Delivery Performance**
-- **Sales Margin Analysis**
-- **Production Variance (Std vs Actual Hours)**
-- **Machine Efficiency & OEE Metrics**
+# 🔗 Portfolio Website  
+A dedicated case-study website is included (`/website/index.html`) featuring:
+
+- Project summary
+- Data model
+- KPIs
+- **Interactive Power BI screenshots**
+- Integration & Automation section (Epicor-style REST → SQL → Power BI)
 
 ---
 
-## 🗄️ 1. SQL Server Database
+# 🧩 1. SQL Server Data Model
 
-### Tables Created
-- `Customers`
-- `Parts`
-- `Machines`
-- `SalesOrders` (Fact)
-- `JobOrders` (Fact)
+### Tables Created  
+- **Customers**  
+- **Parts**  
+- **Machines**  
+- **SalesOrders** *(fact)*  
+- **JobOrders** *(fact)*  
 
-These tables mirror standard ERP structures found in manufacturing systems such as Epicor Kinetic or IFS.
+These mirror ERP structures found in systems like **Epicor Kinetic** and **IFS**, manufacturing modules.
 
-### Example Outputs
+### Use Cases Enabled  
 - Late vs on-time shipments  
-- Scrap & yield  
-- Standard vs actual hours  
-- Downtime-driven efficiency metrics  
+- Margin & profitability tracking  
+- Standard vs actual hours variance  
+- Scrap, yield, and downtime efficiency  
+- OEE: Availability, Performance, Quality  
 
-> In the actual implementation, data is created and stored in SQL Server, then consumed directly by Power BI through a SQL Server connection.
+SQL scripts located at:  
+`/src/sql/create_tables.sql`  
+`/src/sql/seed_data.sql`
 
 ---
 
-## 📈 2. Power BI Data Model
-### Star Schema
-- Fact Tables:
-  - `SalesOrders`
-  - `JobOrders`
-- Dimensions:
-  - `Customers`
-  - `Parts`
-  - `Machines`
-  - `Date` (created in DAX)
+# ⚙️ 2. Integrations & Automation (Epicor-style REST → SQL Server → Power BI)
 
-### Key Relationships
+This solution includes a **Python ETL job** simulating how a real ERP integration behaves.
+
+📄 Full documentation: `/INTEGRATIONS.md`  
+📄 Script: `/src/python/erp_to_sql_powerbi.py`
+
+### ✔ Features  
+- Calls **Epicor-inspired REST endpoints**:
+  - `/v1/customers`
+  - `/v1/parts`
+  - `/v1/salesorders?modifiedSince=...`
+  - `/v1/joborders?modifiedSince=...`
+- Bearer-token authentication  
+- Incremental loading by last-modified date  
+- Dimension loads: truncate + reload  
+- Fact loads: delete & reinsert (simple MERGE pattern)  
+- Logs progress & errors  
+- Designed for SQL Agent / Task Scheduler / cron  
+
+### ✔ Why this matters  
+Manufacturing organizations depend on:
+
+- Timely ERP data
+- Clean dimensional models
+- Automated refresh pipelines
+- Governed KPI dashboards
+
+This project demonstrates the full workflow expected of a modern **ERP Business Analyst**.
+
+---
+
+# 📈 3. Power BI Semantic Model
+
+### Star Schema  
+**Fact tables:**  
+- `SalesOrders`
+- `JobOrders`
+
+**Dimensions:**  
+- `Customers`  
+- `Parts`  
+- `Machines`  
+- `Date` (generated in DAX)
+
+### Core Relationships  
 - CustomerID → SalesOrders  
-- PartID → SalesOrders & JobOrders  
+- PartID → SalesOrders, JobOrders  
 - MachineID → JobOrders  
 - SalesOrderID → JobOrders  
+- Active: Date → OrderDate  
+- Inactive: Date → ShipDate *(used via `USERELATIONSHIP`)*
 
 ---
 
-## 📐 3. DAX Measures
+# 🧠 4. DAX KPI Library
 
-### Delivery KPIs
-```DAX
-OnTimeFlag =
-IF ( SalesOrders[ShipDate] <= SalesOrders[PromiseDate], 1, 0 )
+All measures consolidated in:  
+`/src/PowerBI/DAX_Measures_Script.md`
 
-OnTime Shipments =
-SUM ( SalesOrders[OnTimeFlag] )
+Includes:
 
-Total Shipments =
-COUNTROWS ( SalesOrders )
+### 📦 Service KPIs  
+- On-Time Delivery %  
+- Ship-date OTD using `USERELATIONSHIP`  
+- Late Delivery %  
 
-OnTime Delivery % =
-DIVIDE ( [OnTime Shipments], [Total Shipments] )
-```
+### 💰 Margin KPIs  
+- Revenue  
+- Standard Cost  
+- Margin ($ and %)  
 
-### Margin KPIs
-```DAX
-Revenue =
-SUMX (
-    SalesOrders,
-    SalesOrders[ShipQty] * SalesOrders[UnitPrice]
-)
+### ⚙️ Production KPIs  
+- Standard vs Actual Hours  
+- Hours Variance %  
+- Scrap %  
+- Yield %  
 
-Std Cost =
-SUMX (
-    SalesOrders,
-    SalesOrders[ShipQty] * RELATED ( Parts[StdCostPerUnit] )
-)
+### 🏭 OEE KPIs  
+- Availability  
+- Performance  
+- Quality  
+- OEE %  
 
-Sales Margin =
-[Revenue] - [Std Cost]
-
-Sales Margin % =
-DIVIDE ( [Sales Margin], [Revenue] )
-```
-
-### OEE KPIs (Availability, Performance, Quality)
-```DAX
-Good Units =
-SUM ( JobOrders[CompletedQty] )
-
-Total Units =
-SUM ( JobOrders[CompletedQty] ) + SUM ( JobOrders[ScrapQty] )
-
-Downtime Hours =
-SUM ( JobOrders[DowntimeHours] )
-
-Actual Hours =
-SUM ( JobOrders[ActualHours] )
-
-Run Time (Hours) =
-[Actual Hours] - [Downtime Hours]
-
-Ideal Time (Hours) =
-SUMX (
-    JobOrders,
-    JobOrders[CompletedQty] * JobOrders[StdHoursPerUnit]
-)
-
-Availability % =
-DIVIDE ( [Run Time (Hours)], [Actual Hours] )
-
-Performance % =
-DIVIDE ( [Ideal Time (Hours)], [Run Time (Hours)] )
-
-Quality % =
-DIVIDE ( [Good Units], [Total Units] )
-
-OEE % =
-[Availability %] * [Performance %] * [Quality %]
-```
-
-Full DAX library, including production variance and yield KPIs, can be defined in the Power BI model.
+Each metric is modeled exactly as used in real manufacturing plants.
 
 ---
 
-## 🧩 Skills Demonstrated
-- SQL Server relational modeling  
-- Power BI star schema design  
-- DAX measure development  
-- Manufacturing KPI reporting (OTD, margin, variance, OEE)  
-- Understanding of shop-floor concepts: scrap, yield, standard vs actual hours  
-- Documentation and presentation  
+# 📊 5. Dashboards Delivered
+
+Screenshots: `/docs/PowerBI_Screenshots/`
+
+- **On-Time Delivery Performance**
+- **Sales & Margin Analysis**
+- **Production Variance (Std vs Actual Hours)**
+- **Machine Efficiency & OEE**
+
+All visuals are clickable on the portfolio website thanks to a custom lightbox script.
 
 ---
 
-## 📬 Contact
+# 🧠 Skills Demonstrated
+
+### ERP & Data  
+- Epicor Kinetic–style REST patterns  
+- SQL Server modeling (dimensions & facts)  
+- Manufacturing concepts: OTD, costing, variance, scrap, OEE  
+
+### Analytics & Engineering  
+- Python ETL development  
+- REST API consumption  
+- Incremental load logic  
+- DAX semantic modeling  
+- Star schema design  
+- Power BI dashboarding  
+
+### Professional Capability  
+- Documentation  
+- Architecture diagrams  
+- Analyst-style communication  
+- Production-minded design patterns  
+
+---
+
+# 📬 Contact
 
 **Marc Lomuntad**  
 📧 marc.lomuntad24@gmail.com  
-🔗 LinkedIn: [Your LinkedIn URL]
+🔗 LinkedIn: (insert your LinkedIn URL here)
 
+---
+
+# 🎯 Summary  
+This repository showcases a complete ERP-style analytics project that includes:
+
+✔ Data modeling  
+✔ Integrations & automation  
+✔ Semantic modeling  
+✔ Manufacturing KPI dashboards  
+✔ A professional portfolio website  
+
+It demonstrates the technical depth and workflow expected of a **Modern ERP Business Analyst / Power BI Analyst / Data Analyst with manufacturing domain expertise**.
