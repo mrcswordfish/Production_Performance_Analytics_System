@@ -44,8 +44,8 @@ This project simulates a realistic ERP → Analytics stack:
 
 ---
 
-# 🔗 Portfolio Website  
-A dedicated case-study website is included (`/website/index.html`) featuring:
+# 🔗 Website  
+A dedicated case-study website is included featuring:
 
 - Project summary
 - Data model
